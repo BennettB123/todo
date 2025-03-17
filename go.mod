@@ -1,4 +1,4 @@
-module learning/todo
+module github.com/dbballentine/todo
 
 go 1.24.0
 
