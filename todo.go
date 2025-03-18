@@ -7,6 +7,7 @@ const (
 )
 
 type Todo struct {
+	id     uint32
 	name   string
 	status string
 }

@@ -47,6 +47,7 @@ func GetOrCreateDatabase() Database {
 func (todoDB *Database) Init() {
 	_, err := todoDB.db.ExecContext(context.Background(),
 		`CREATE TABLE IF NOT EXISTS todo (
+		id INTEGER PRIMARY KEY,
 		name string,
 		status string)`)
 	if err != nil {
