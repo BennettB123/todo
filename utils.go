@@ -18,6 +18,6 @@ func CreateDirectory(path string) {
 			os.Exit(1)
 		}
 	} else {
-		fmt.Printf("directory at '%s' already exists\n", path)
+		// fmt.Printf("directory at '%s' already exists\n", path)
 	}
 }
