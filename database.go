@@ -98,6 +98,16 @@ func (database *Database) GetAllTodoEntries() []Todo {
 	return todos
 }
 
+func (database *Database) MarkAsDone(id uint32) {
+	_, err := database.db.ExecContext(context.Background(),
+		`UPDATE todo SET status = ? WHERE id = ?`, Done, id)
+	if err != nil {
+		fmt.Println("unable to update todo entry in database.")
+		fmt.Printf("\terror: %s", err)
+		os.Exit(1)
+	}
+}
+
 func (database *Database) Close() {
 	err := database.db.Close()
 	if err != nil {

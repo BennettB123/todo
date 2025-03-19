@@ -40,18 +40,20 @@ func (n *NewCmd) Run(context Context) error {
 	return nil
 }
 
-type DeleteCmd struct {
+type DoneCmd struct {
+	Id uint32 `short:"i" help:"The id of the TODO entry to mark as done."`
 }
 
-func (d *DeleteCmd) Run(context Context) error {
-	panic("not implemented")
+func (d *DoneCmd) Run(context Context) error {
+	context.db.MarkAsDone(d.Id)
+
 	return nil
 }
 
 var CLI struct {
-	List   ListCmd   `cmd:"" help:"List TODO entries."`
-	New    NewCmd    `cmd:"" help:"Create a new TODO entry."`
-	Delete DeleteCmd `cmd:"" help:"Delete an existing TODO entry."`
+	List ListCmd `cmd:"" help:"List TODO entries."`
+	New  NewCmd  `cmd:"" help:"Create a new TODO entry."`
+	Done DoneCmd `cmd:"" help:"Mark an existing TODO entry as Done."`
 }
 
 func main() {
