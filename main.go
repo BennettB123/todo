@@ -25,8 +25,7 @@ func (l *ListCmd) Run(context Context) error {
 }
 
 type NewCmd struct {
-	// TODO: make Name a required/positional field (always first arg after `new`)
-	Name string `short:"n" help:"The name of the TODO entry."`
+	Name string `arg:"" help:"The name of the TODO entry."`
 }
 
 func (n *NewCmd) Run(context Context) error {
@@ -41,7 +40,7 @@ func (n *NewCmd) Run(context Context) error {
 }
 
 type DoneCmd struct {
-	Id uint32 `short:"i" help:"The id of the TODO entry to mark as done."`
+	Id uint32 `arg:"" help:"The id of the TODO entry to mark as done."`
 }
 
 func (d *DoneCmd) Run(context Context) error {
@@ -51,9 +50,10 @@ func (d *DoneCmd) Run(context Context) error {
 }
 
 var CLI struct {
-	List ListCmd `cmd:"" help:"List TODO entries."`
-	New  NewCmd  `cmd:"" help:"Create a new TODO entry."`
-	Done DoneCmd `cmd:"" help:"Mark an existing TODO entry as Done."`
+	List  ListCmd `cmd:"" help:"List TODO entries."`
+	New   NewCmd  `cmd:"" help:"Create a new TODO entry."`
+	Done  DoneCmd `cmd:"" help:"Mark an existing TODO entry as Done."`
+	Debug bool    `help:"Enable debug mode for verbose logging."`
 }
 
 func main() {
@@ -62,5 +62,10 @@ func main() {
 	db.Init()
 
 	ctx := kong.Parse(&CLI)
-	ctx.Run(Context{db: db, verbose: false})
+
+	if CLI.Debug {
+		fmt.Println("Debug mode enabled.")
+	}
+
+	ctx.Run(Context{db: db, verbose: CLI.Debug})
 }
