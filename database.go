@@ -57,6 +57,47 @@ func (todoDB *Database) Init() {
 	}
 }
 
+func (database *Database) CreateTodoEntry(todo Todo) {
+	_, err := database.db.ExecContext(context.Background(),
+		`INSERT INTO todo (name, status) VALUES (?, ?)`,
+		todo.name, todo.status)
+	if err != nil {
+		fmt.Println("unable to insert todo entry into database.")
+		fmt.Printf("\terror: %s", err)
+		os.Exit(1)
+	}
+}
+
+func (database *Database) GetAllTodoEntries() []Todo {
+	rows, err := database.db.QueryContext(context.Background(),
+		`SELECT id, name, status FROM todo`)
+	if err != nil {
+		fmt.Println("unable to query todo entries from database.")
+		fmt.Printf("\terror: %s", err)
+		os.Exit(1)
+	}
+	defer rows.Close()
+
+	var todos []Todo
+	for rows.Next() {
+		var todo Todo
+		err := rows.Scan(&todo.id, &todo.name, &todo.status)
+		if err != nil {
+			fmt.Println("unable to scan todo entry from database.")
+			fmt.Printf("\terror: %s", err)
+			os.Exit(1)
+		}
+		todos = append(todos, todo)
+	}
+	if rows.Err() != nil {
+		fmt.Println("error while iterating over todo entries from database.")
+		fmt.Printf("\terror: %s", err)
+		os.Exit(1)
+	}
+
+	return todos
+}
+
 func (database *Database) Close() {
 	err := database.db.Close()
 	if err != nil {

@@ -11,3 +11,9 @@ type Todo struct {
 	name   string
 	status string
 }
+
+// NewTodo creates a new Todo instance.
+//   The Id is set to 0 as a placeholder, since the database will assign the Id.
+func NewTodo(name string) Todo {
+	return Todo{0, name, Open}
+}
