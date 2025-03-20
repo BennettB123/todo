@@ -8,8 +8,8 @@ import (
 )
 
 type Context struct {
-	db      Database
-	verbose bool
+	db     Database
+	logger Logger
 }
 
 type ListCmd struct {
@@ -57,15 +57,16 @@ var CLI struct {
 }
 
 func main() {
-	db := GetOrCreateDatabase()
+	ctx := kong.Parse(&CLI)
+
+	logger := Logger{debug: CLI.Debug}
+	if CLI.Debug {
+		logger.Log(Debug, "Debug mode enabled.")
+	}
+
+	db := GetOrCreateDatabase(logger)
 	defer db.Close()
 	db.Init()
 
-	ctx := kong.Parse(&CLI)
-
-	if CLI.Debug {
-		fmt.Println("Debug mode enabled.")
-	}
-
-	ctx.Run(Context{db: db, verbose: CLI.Debug})
+	ctx.Run(Context{db, logger})
 }

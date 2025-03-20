@@ -13,46 +13,46 @@ const DBFileName string = "data.sqlite3"
 
 // Thin wrapper around a *sql.DB
 type Database struct {
-	db *sql.DB
+	db     *sql.DB
+	logger Logger
 }
 
-func GetOrCreateDatabase() Database {
+func GetOrCreateDatabase(logger Logger) Database {
+	logger.Log(Debug, "getting user's home directory.")
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Println("unable to find user's home directory")
-		fmt.Printf("\terror: %s", err)
+		logger.LogError("unable to find user's home directory.", err)
 		os.Exit(1)
 	}
+	logger.Log(Debug, fmt.Sprintf("user's home directory: %s", userHomeDir))
 
 	dbDirPath := filepath.Join(userHomeDir, ConfigDirName)
-	CreateDirectory(dbDirPath)
+	if err = CreateDirectory(dbDirPath, logger); err != nil {
+		logger.LogError("unable to create database directory.", err)
+	}
 
 	db, err := sql.Open("sqlite", filepath.Join(dbDirPath, DBFileName))
 	if err != nil {
-		fmt.Println("unable to open sqlite3 database file.")
-		fmt.Printf("\terror: %s", err)
+		logger.LogError("unable to open sqlite3 database file.", err)
 		os.Exit(1)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		fmt.Println("unable to open sqlite3 database file.")
-		fmt.Printf("\terror: %s", err)
+	if err = db.Ping(); err != nil {
+		logger.LogError("unable to open sqlite3 database file.", err)
 		os.Exit(1)
 	}
 
-	return Database{db}
+	return Database{db, logger}
 }
 
-func (todoDB *Database) Init() {
-	_, err := todoDB.db.ExecContext(context.Background(),
+func (database *Database) Init() {
+	_, err := database.db.ExecContext(context.Background(),
 		`CREATE TABLE IF NOT EXISTS todo (
 		id INTEGER PRIMARY KEY,
 		name string,
 		status string)`)
 	if err != nil {
-		fmt.Println("unable to create 'todo' table in sqlite3 database file.")
-		fmt.Printf("\terror: %s", err)
+		database.logger.LogError("unable to create 'todo' table in sqlite3 database file.", err)
 		os.Exit(1)
 	}
 }
@@ -62,8 +62,7 @@ func (database *Database) CreateTodoEntry(todo Todo) {
 		`INSERT INTO todo (name, status) VALUES (?, ?)`,
 		todo.name, todo.status)
 	if err != nil {
-		fmt.Println("unable to insert todo entry into database.")
-		fmt.Printf("\terror: %s", err)
+		database.logger.LogError("unable to insert todo entry into database.", err)
 		os.Exit(1)
 	}
 }
@@ -72,8 +71,7 @@ func (database *Database) GetAllTodoEntries() []Todo {
 	rows, err := database.db.QueryContext(context.Background(),
 		`SELECT id, name, status FROM todo`)
 	if err != nil {
-		fmt.Println("unable to query todo entries from database.")
-		fmt.Printf("\terror: %s", err)
+		database.logger.LogError("unable to query todo entries from database.", err)
 		os.Exit(1)
 	}
 	defer rows.Close()
@@ -81,17 +79,14 @@ func (database *Database) GetAllTodoEntries() []Todo {
 	var todos []Todo
 	for rows.Next() {
 		var todo Todo
-		err := rows.Scan(&todo.id, &todo.name, &todo.status)
-		if err != nil {
-			fmt.Println("unable to scan todo entry from database.")
-			fmt.Printf("\terror: %s", err)
+		if err := rows.Scan(&todo.id, &todo.name, &todo.status); err != nil {
+			database.logger.LogError("unable to scan todo entry from database.", err)
 			os.Exit(1)
 		}
 		todos = append(todos, todo)
 	}
 	if rows.Err() != nil {
-		fmt.Println("error while iterating over todo entries from database.")
-		fmt.Printf("\terror: %s", err)
+		database.logger.LogError("error while iterating over todo entries from database.", err)
 		os.Exit(1)
 	}
 
@@ -102,16 +97,13 @@ func (database *Database) MarkAsDone(id uint32) {
 	_, err := database.db.ExecContext(context.Background(),
 		`UPDATE todo SET status = ? WHERE id = ?`, Done, id)
 	if err != nil {
-		fmt.Println("unable to update todo entry in database.")
-		fmt.Printf("\terror: %s", err)
+		database.logger.LogError("unable to update todo entry in database.", err)
 		os.Exit(1)
 	}
 }
 
 func (database *Database) Close() {
-	err := database.db.Close()
-	if err != nil {
-		fmt.Println("unable to close database.")
-		fmt.Printf("\terror: %s", err)
+	if err := database.db.Close(); err != nil {
+		database.logger.LogError("unable to close database.", err)
 	}
 }
