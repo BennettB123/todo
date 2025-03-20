@@ -66,10 +66,10 @@ func (d *OpenCmd) Run(context Context) error {
 }
 
 var CLI struct {
-	List  ListCmd `cmd:"" help:"List TODO entries."`
-	New   NewCmd  `cmd:"" help:"Create a new TODO entry."`
-	Done  DoneCmd `cmd:"" help:"Mark existing TODO entries as Done."`
-	Open  OpenCmd `cmd:"" help:"Mark existing TODO entries as Open."`
+	List  ListCmd `cmd:"" default:"1" aliases:"ls" help:"List TODO entries."`
+	New   NewCmd  `cmd:"" aliases:"n" help:"Create a new TODO entry."`
+	Done  DoneCmd `cmd:"" aliases:"d" help:"Mark existing TODO entries as Done."`
+	Open  OpenCmd `cmd:"" aliases:"o" help:"Mark existing TODO entries as Open."`
 	Debug bool    `help:"Enable debug mode for verbose logging."`
 }
 
