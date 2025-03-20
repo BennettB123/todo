@@ -40,11 +40,14 @@ func (n *NewCmd) Run(context Context) error {
 }
 
 type DoneCmd struct {
-	Id uint32 `arg:"" help:"The id of the TODO entry to mark as done."`
+	Ids []uint32 `arg:"" help:"IDs of TODO entries to mark done. Multiple, space-separated values are supported."`
 }
 
 func (d *DoneCmd) Run(context Context) error {
-	context.db.MarkAsDone(d.Id)
+	context.logger.Log(Debug, fmt.Sprintf("Marking TODO entries as done: %v", d.Ids))
+	for _, id := range d.Ids {
+		context.db.MarkAsDone(id)
+	}
 
 	return nil
 }
