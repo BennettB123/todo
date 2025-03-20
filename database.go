@@ -93,11 +93,11 @@ func (database *Database) GetAllTodoEntries() []Todo {
 	return todos
 }
 
-func (database *Database) MarkAsDone(id uint32) {
+func (database *Database) ChangeTodoStatus(id uint32, status string) {
 	_, err := database.db.ExecContext(context.Background(),
-		`UPDATE todo SET status = ? WHERE id = ?`, Done, id)
+		`UPDATE todo SET status = ? WHERE id = ?`, status, id)
 	if err != nil {
-		database.logger.LogError("unable to update todo entry in database.", err)
+		database.logger.LogError("unable to update TODO status in database.", err)
 		os.Exit(1)
 	}
 }

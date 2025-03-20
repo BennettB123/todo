@@ -40,13 +40,26 @@ func (n *NewCmd) Run(context Context) error {
 }
 
 type DoneCmd struct {
-	Ids []uint32 `arg:"" help:"IDs of TODO entries to mark done. Multiple, space-separated values are supported."`
+	Ids []uint32 `arg:"" help:"IDs of TODO entries to mark Done. Multiple, space-separated values are supported."`
 }
 
 func (d *DoneCmd) Run(context Context) error {
-	context.logger.Log(Debug, fmt.Sprintf("Marking TODO entries as done: %v", d.Ids))
+	context.logger.Log(Debug, fmt.Sprintf("Marking TODO entries as Done: %v", d.Ids))
 	for _, id := range d.Ids {
-		context.db.MarkAsDone(id)
+		context.db.ChangeTodoStatus(id, Done)
+	}
+
+	return nil
+}
+
+type OpenCmd struct {
+	Ids []uint32 `arg:"" help:"IDs of TODO entries to mark Open. Multiple, space-separated values are supported."`
+}
+
+func (d *OpenCmd) Run(context Context) error {
+	context.logger.Log(Debug, fmt.Sprintf("Marking TODO entries as Open: %v", d.Ids))
+	for _, id := range d.Ids {
+		context.db.ChangeTodoStatus(id, Open)
 	}
 
 	return nil
@@ -55,7 +68,8 @@ func (d *DoneCmd) Run(context Context) error {
 var CLI struct {
 	List  ListCmd `cmd:"" help:"List TODO entries."`
 	New   NewCmd  `cmd:"" help:"Create a new TODO entry."`
-	Done  DoneCmd `cmd:"" help:"Mark an existing TODO entry as Done."`
+	Done  DoneCmd `cmd:"" help:"Mark existing TODO entries as Done."`
+	Open  OpenCmd `cmd:"" help:"Mark existing TODO entries as Open."`
 	Debug bool    `help:"Enable debug mode for verbose logging."`
 }
 
