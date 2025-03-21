@@ -82,7 +82,9 @@ var CLI struct {
 }
 
 func main() {
-	ctx := kong.Parse(&CLI)
+	ctx := kong.Parse(&CLI,
+		kong.Name("todo"),
+		kong.Description("A simple command-line TODO list manager."))
 
 	logger := Logger{debug: CLI.Debug}
 	if CLI.Debug {
