@@ -16,18 +16,7 @@ type ListCmd struct {
 }
 
 func (l *ListCmd) Run(context Context) error {
-	context.logger.LogDebug("retrieving all TODO entries")
-	todos, err := context.db.GetAllTodoEntries()
-	if err != nil {
-		return err
-	}
-
-	context.logger.LogDebug(fmt.Sprintf("%d TODO entries found", len(todos)))
-	for _, todo := range todos {
-		fmt.Printf("%d: %s - %s\n", todo.id, todo.status, todo.name)
-	}
-
-	return nil
+	return PrintTodos(context)
 }
 
 type NewCmd struct {
@@ -38,7 +27,13 @@ func (n *NewCmd) Run(context Context) error {
 	todo := NewTodo(n.Name)
 
 	context.logger.LogDebug(fmt.Sprintf("creating new TODO entry with name [%s] and status [%s]", todo.name, todo.status))
-	return context.db.CreateTodoEntry(todo)
+	err := context.db.CreateTodoEntry(todo)
+	if err != nil {
+		return err
+	}
+
+	err = PrintTodos(context)
+	return err
 }
 
 type DoneCmd struct {
@@ -54,7 +49,8 @@ func (d *DoneCmd) Run(context Context) error {
 		}
 	}
 
-	return nil
+	err := PrintTodos(context)
+	return err
 }
 
 type OpenCmd struct {
@@ -70,7 +66,8 @@ func (d *OpenCmd) Run(context Context) error {
 		}
 	}
 
-	return nil
+	err := PrintTodos(context)
+	return err
 }
 
 var CLI struct {
@@ -79,6 +76,30 @@ var CLI struct {
 	Done  DoneCmd `cmd:"" aliases:"d" help:"Mark existing TODO entries as Done."`
 	Open  OpenCmd `cmd:"" aliases:"o" help:"Mark existing TODO entries as Open."`
 	Debug bool    `help:"Enable debug mode for verbose logging."`
+}
+
+func PrintTodos(context Context) error {
+	context.logger.LogDebug("retrieving all TODO entries")
+	todos, err := context.db.GetAllTodoEntries()
+	if err != nil {
+		return err
+	}
+
+	context.logger.LogDebug(fmt.Sprintf("%d TODO entries found", len(todos)))
+
+	for _, todo := range todos {
+		if todo.status == Open {
+			fmt.Printf("%d: [ ] %s\n", todo.id, todo.name)
+		}
+	}
+
+	for _, todo := range todos {
+		if todo.status == Done {
+			fmt.Printf("%d: [X] %s\n", todo.id, todo.name)
+		}
+	}
+
+	return nil
 }
 
 func main() {
