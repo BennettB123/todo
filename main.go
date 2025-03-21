@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/alecthomas/kong"
 	_ "modernc.org/sqlite"
@@ -24,7 +25,9 @@ type NewCmd struct {
 }
 
 func (n *NewCmd) Run(context Context) error {
-	todo := NewTodo(n.Name)
+	context.logger.LogDebug(fmt.Sprintf("sanitizing provided TODO name '%s'", n.Name))
+	name := strings.Split(strings.ReplaceAll(n.Name, "\r\n", "\n"), "\n")[0]
+	todo := NewTodo(name)
 
 	context.logger.LogDebug(fmt.Sprintf("creating new TODO entry with name [%s] and status [%s]", todo.name, todo.status))
 	err := context.db.CreateTodoEntry(todo)
