@@ -16,7 +16,13 @@ type ListCmd struct {
 }
 
 func (l *ListCmd) Run(context Context) error {
-	todos := context.db.GetAllTodoEntries()
+	context.logger.Log(Debug, "retrieving all TODO entries")
+	todos, err := context.db.GetAllTodoEntries()
+	if err != nil {
+		return err
+	}
+
+	context.logger.Log(Debug, fmt.Sprintf("%d TODO entries found", len(todos)))
 	for _, todo := range todos {
 		fmt.Printf("%d: %s - %s\n", todo.id, todo.status, todo.name)
 	}
@@ -29,14 +35,10 @@ type NewCmd struct {
 }
 
 func (n *NewCmd) Run(context Context) error {
-	if n.Name == "" {
-		return fmt.Errorf("name is required")
-	}
-
 	todo := NewTodo(n.Name)
-	context.db.CreateTodoEntry(todo)
 
-	return nil
+	context.logger.Log(Debug, fmt.Sprintf("creating new TODO entry with name [%s] and status [%s]", todo.name, todo.status))
+	return context.db.CreateTodoEntry(todo)
 }
 
 type DoneCmd struct {
@@ -46,7 +48,10 @@ type DoneCmd struct {
 func (d *DoneCmd) Run(context Context) error {
 	context.logger.Log(Debug, fmt.Sprintf("Marking TODO entries as Done: %v", d.Ids))
 	for _, id := range d.Ids {
-		context.db.ChangeTodoStatus(id, Done)
+		err := context.db.ChangeTodoStatus(id, Done)
+		if err != nil {
+			context.logger.Log(Error, fmt.Sprintf("unable to mark entry with ID '%d' as Done: %v", id, err))
+		}
 	}
 
 	return nil
@@ -59,7 +64,10 @@ type OpenCmd struct {
 func (d *OpenCmd) Run(context Context) error {
 	context.logger.Log(Debug, fmt.Sprintf("Marking TODO entries as Open: %v", d.Ids))
 	for _, id := range d.Ids {
-		context.db.ChangeTodoStatus(id, Open)
+		err := context.db.ChangeTodoStatus(id, Open)
+		if err != nil {
+			context.logger.Log(Error, fmt.Sprintf("unable to mark entry with ID '%d' as Open: %v", id, err))
+		}
 	}
 
 	return nil
@@ -81,9 +89,22 @@ func main() {
 		logger.Log(Debug, "Debug mode enabled.")
 	}
 
-	db := GetOrCreateDatabase(logger)
-	defer db.Close()
-	db.Init()
+	db, err := GetOrCreateDatabase(logger)
+	if err != nil {
+		logger.Log(Error, err.Error())
+		return
+	}
 
-	ctx.Run(Context{db, logger})
+	defer db.Close()
+	err = db.Init()
+	if err != nil {
+
+		logger.Log(Error, err.Error())
+		return
+	}
+
+	err = ctx.Run(Context{db, logger})
+	if err != nil {
+		logger.Log(Error, err.Error())
+	}
 }

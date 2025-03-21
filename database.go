@@ -17,62 +17,60 @@ type Database struct {
 	logger Logger
 }
 
-func GetOrCreateDatabase(logger Logger) Database {
+func GetOrCreateDatabase(logger Logger) (Database, error) {
 	logger.Log(Debug, "getting user's home directory.")
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
-		logger.LogError("unable to find user's home directory.", err)
-		os.Exit(1)
+		return Database{}, fmt.Errorf("unable to get user's home directory: %w", err)
 	}
 	logger.Log(Debug, fmt.Sprintf("user's home directory: %s", userHomeDir))
 
 	dbDirPath := filepath.Join(userHomeDir, ConfigDirName)
 	if err = CreateDirectory(dbDirPath, logger); err != nil {
-		logger.LogError("unable to create database directory.", err)
+		return Database{}, fmt.Errorf("unable to create database directory: %w", err)
 	}
 
 	db, err := sql.Open("sqlite", filepath.Join(dbDirPath, DBFileName))
 	if err != nil {
-		logger.LogError("unable to open sqlite3 database file.", err)
-		os.Exit(1)
+		return Database{}, fmt.Errorf("unable to open sqlite3 database file: %w", err)
 	}
 
 	if err = db.Ping(); err != nil {
-		logger.LogError("unable to open sqlite3 database file.", err)
-		os.Exit(1)
+		return Database{}, fmt.Errorf("unable to contact sqlite3 database: %w", err)
 	}
 
-	return Database{db, logger}
+	return Database{db, logger}, nil
 }
 
-func (database *Database) Init() {
+func (database *Database) Init() error {
 	_, err := database.db.ExecContext(context.Background(),
 		`CREATE TABLE IF NOT EXISTS todo (
 		id INTEGER PRIMARY KEY,
 		name string,
 		status string)`)
 	if err != nil {
-		database.logger.LogError("unable to create 'todo' table in sqlite3 database file.", err)
-		os.Exit(1)
+		return fmt.Errorf("unable to create 'todo' table in sqlite3 database file: %w", err)
 	}
+
+	return nil
 }
 
-func (database *Database) CreateTodoEntry(todo Todo) {
+func (database *Database) CreateTodoEntry(todo Todo) error {
 	_, err := database.db.ExecContext(context.Background(),
 		`INSERT INTO todo (name, status) VALUES (?, ?)`,
 		todo.name, todo.status)
 	if err != nil {
-		database.logger.LogError("unable to insert todo entry into database.", err)
-		os.Exit(1)
+		return fmt.Errorf("unable to insert todo entry into database: %w", err)
 	}
+
+	return nil
 }
 
-func (database *Database) GetAllTodoEntries() []Todo {
+func (database *Database) GetAllTodoEntries() ([]Todo, error) {
 	rows, err := database.db.QueryContext(context.Background(),
 		`SELECT id, name, status FROM todo`)
 	if err != nil {
-		database.logger.LogError("unable to query todo entries from database.", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("unable to query todo entries from database: %w", err)
 	}
 	defer rows.Close()
 
@@ -80,30 +78,31 @@ func (database *Database) GetAllTodoEntries() []Todo {
 	for rows.Next() {
 		var todo Todo
 		if err := rows.Scan(&todo.id, &todo.name, &todo.status); err != nil {
-			database.logger.LogError("unable to scan todo entry from database.", err)
-			os.Exit(1)
+			return nil, fmt.Errorf("unable to scan todo entry from database: %w", err)
 		}
 		todos = append(todos, todo)
 	}
 	if rows.Err() != nil {
-		database.logger.LogError("error while iterating over todo entries from database.", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("error while iterating over todo entries from database: %w", err)
 	}
 
-	return todos
+	return todos, nil
 }
 
-func (database *Database) ChangeTodoStatus(id uint32, status string) {
+func (database *Database) ChangeTodoStatus(id uint32, status string) error {
 	_, err := database.db.ExecContext(context.Background(),
 		`UPDATE todo SET status = ? WHERE id = ?`, status, id)
 	if err != nil {
-		database.logger.LogError("unable to update TODO status in database.", err)
-		os.Exit(1)
+		return fmt.Errorf("unable to update todo status in database: %w", err)
 	}
+
+	return nil
 }
 
-func (database *Database) Close() {
+func (database *Database) Close() error {
 	if err := database.db.Close(); err != nil {
-		database.logger.LogError("unable to close database.", err)
+		return fmt.Errorf("unable to close database: %w", err)
 	}
+
+	return nil
 }
