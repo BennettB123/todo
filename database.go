@@ -18,12 +18,12 @@ type Database struct {
 }
 
 func GetOrCreateDatabase(logger Logger) (Database, error) {
-	logger.Log(Debug, "getting user's home directory.")
+	logger.LogDebug("getting user's home directory.")
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		return Database{}, fmt.Errorf("unable to get user's home directory: %w", err)
 	}
-	logger.Log(Debug, fmt.Sprintf("user's home directory: %s", userHomeDir))
+	logger.LogDebug(fmt.Sprintf("user's home directory: %s", userHomeDir))
 
 	dbDirPath := filepath.Join(userHomeDir, ConfigDirName)
 	if err = CreateDirectory(dbDirPath, logger); err != nil {

@@ -2,19 +2,18 @@ package main
 
 import "fmt"
 
-const (
-	Debug = "DEBUG"
-	Error = "ERROR"
-)
-
 type Logger struct {
 	debug bool
 }
 
-func (logger Logger) Log(logLevel string, message string) {
-	if logLevel == Debug && !logger.debug {
+func (logger Logger) LogError(message string) {
+	fmt.Printf("[Error]: %s\n", message)
+}
+
+func (logger Logger) LogDebug(message string) {
+	if !logger.debug {
 		return
 	}
 
-	fmt.Printf("[%s]: %s\n", logLevel, message)
+	fmt.Printf("[Debug]: %s\n", message)
 }

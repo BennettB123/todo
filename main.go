@@ -16,13 +16,13 @@ type ListCmd struct {
 }
 
 func (l *ListCmd) Run(context Context) error {
-	context.logger.Log(Debug, "retrieving all TODO entries")
+	context.logger.LogDebug("retrieving all TODO entries")
 	todos, err := context.db.GetAllTodoEntries()
 	if err != nil {
 		return err
 	}
 
-	context.logger.Log(Debug, fmt.Sprintf("%d TODO entries found", len(todos)))
+	context.logger.LogDebug(fmt.Sprintf("%d TODO entries found", len(todos)))
 	for _, todo := range todos {
 		fmt.Printf("%d: %s - %s\n", todo.id, todo.status, todo.name)
 	}
@@ -37,7 +37,7 @@ type NewCmd struct {
 func (n *NewCmd) Run(context Context) error {
 	todo := NewTodo(n.Name)
 
-	context.logger.Log(Debug, fmt.Sprintf("creating new TODO entry with name [%s] and status [%s]", todo.name, todo.status))
+	context.logger.LogDebug(fmt.Sprintf("creating new TODO entry with name [%s] and status [%s]", todo.name, todo.status))
 	return context.db.CreateTodoEntry(todo)
 }
 
@@ -46,11 +46,11 @@ type DoneCmd struct {
 }
 
 func (d *DoneCmd) Run(context Context) error {
-	context.logger.Log(Debug, fmt.Sprintf("Marking TODO entries as Done: %v", d.Ids))
+	context.logger.LogDebug(fmt.Sprintf("Marking TODO entries as Done: %v", d.Ids))
 	for _, id := range d.Ids {
 		err := context.db.ChangeTodoStatus(id, Done)
 		if err != nil {
-			context.logger.Log(Error, fmt.Sprintf("unable to mark entry with ID '%d' as Done: %v", id, err))
+			context.logger.LogError(fmt.Sprintf("unable to mark entry with ID '%d' as Done: %v", id, err))
 		}
 	}
 
@@ -62,11 +62,11 @@ type OpenCmd struct {
 }
 
 func (d *OpenCmd) Run(context Context) error {
-	context.logger.Log(Debug, fmt.Sprintf("Marking TODO entries as Open: %v", d.Ids))
+	context.logger.LogDebug(fmt.Sprintf("Marking TODO entries as Open: %v", d.Ids))
 	for _, id := range d.Ids {
 		err := context.db.ChangeTodoStatus(id, Open)
 		if err != nil {
-			context.logger.Log(Error, fmt.Sprintf("unable to mark entry with ID '%d' as Open: %v", id, err))
+			context.logger.LogError(fmt.Sprintf("unable to mark entry with ID '%d' as Open: %v", id, err))
 		}
 	}
 
@@ -86,12 +86,12 @@ func main() {
 
 	logger := Logger{debug: CLI.Debug}
 	if CLI.Debug {
-		logger.Log(Debug, "Debug mode enabled.")
+		logger.LogDebug("Debug mode enabled.")
 	}
 
 	db, err := GetOrCreateDatabase(logger)
 	if err != nil {
-		logger.Log(Error, err.Error())
+		logger.LogError(err.Error())
 		return
 	}
 
@@ -99,12 +99,12 @@ func main() {
 	err = db.Init()
 	if err != nil {
 
-		logger.Log(Error, err.Error())
+		logger.LogError(err.Error())
 		return
 	}
 
 	err = ctx.Run(Context{db, logger})
 	if err != nil {
-		logger.Log(Error, err.Error())
+		logger.LogError(err.Error())
 	}
 }
