@@ -92,13 +92,31 @@ func (e *EditCmd) Run(context Context) error {
 	return err
 }
 
+type DeleteCmd struct {
+	Ids []uint32 `arg:"" help:"IDs of TODO entries to delete. Multiple, space-separated values are supported."`
+}
+
+func (d *DeleteCmd) Run(context Context) error {
+	context.logger.LogDebug(fmt.Sprintf("Deleting TODO entries: %v", d.Ids))
+	for _, id := range d.Ids {
+		err := context.db.DeleteEntry(id)
+		if err != nil {
+			context.logger.LogError(fmt.Sprintf("unable to delete entry with ID '%d': %v", id, err))
+		}
+	}
+
+	err := PrintTodos(context)
+	return err
+}
+
 var CLI struct {
-	List  ListCmd `cmd:"" default:"1" aliases:"ls" help:"List TODO entries."`
-	New   NewCmd  `cmd:"" aliases:"n" help:"Create a new TODO entry."`
-	Done  DoneCmd `cmd:"" aliases:"d" help:"Mark existing TODO entries as Done."`
-	Open  OpenCmd `cmd:"" aliases:"o" help:"Mark existing TODO entries as Open."`
-	Edit  EditCmd `cmd:"" aliases:"e" help:"Edit the name of an existing TODO entry."`
-	Debug bool    `help:"Enable debug mode for verbose logging."`
+	List   ListCmd   `cmd:"" default:"1" aliases:"ls" help:"List TODO entries."`
+	New    NewCmd    `cmd:"" aliases:"n" help:"Create a new TODO entry."`
+	Done   DoneCmd   `cmd:"" aliases:"d" help:"Mark existing TODO entries as Done."`
+	Open   OpenCmd   `cmd:"" aliases:"o" help:"Mark existing TODO entries as Open."`
+	Edit   EditCmd   `cmd:"" aliases:"e" help:"Edit the name of an existing TODO entry."`
+	Delete DeleteCmd `cmd:"" aliases:"rm" help:"Delete existing TODO entries."`
+	Debug  bool      `help:"Enable debug mode for verbose logging."`
 }
 
 func PrintTodos(context Context) error {

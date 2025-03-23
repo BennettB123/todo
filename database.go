@@ -109,6 +109,16 @@ func (database *Database) ChangeName(id uint32, name string) error {
 	return nil
 }
 
+func (database *Database) DeleteEntry(id uint32) error {
+	_, err := database.db.ExecContext(context.Background(),
+		`DELETE FROM todo WHERE id = ?`, id)
+	if err != nil {
+		return fmt.Errorf("unable to delete todo entry from database: %w", err)
+	}
+
+	return nil
+}
+
 func (database *Database) Close() error {
 	if err := database.db.Close(); err != nil {
 		return fmt.Errorf("unable to close database: %w", err)
