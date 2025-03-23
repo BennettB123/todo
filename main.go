@@ -26,7 +26,7 @@ type NewCmd struct {
 
 func (n *NewCmd) Run(context Context) error {
 	context.logger.LogDebug(fmt.Sprintf("sanitizing provided TODO name '%s'", n.Name))
-	name := strings.Split(strings.ReplaceAll(n.Name, "\r\n", "\n"), "\n")[0]
+	name := SanitizeName(n.Name)
 	todo := NewTodo(name)
 
 	context.logger.LogDebug(fmt.Sprintf("creating new TODO entry with name [%s] and status [%s]", todo.name, todo.status))
@@ -73,11 +73,31 @@ func (d *OpenCmd) Run(context Context) error {
 	return err
 }
 
+type EditCmd struct {
+	Id   uint32 `arg:"" help:"ID of TODO entry to edit."`
+	Name string `arg:"" help:"New name for the TODO entry."`
+}
+
+func (e *EditCmd) Run(context Context) error {
+	context.logger.LogDebug(fmt.Sprintf("sanitizing provided TODO name '%s'", e.Name))
+	name := SanitizeName(e.Name)
+
+	context.logger.LogDebug(fmt.Sprintf("editing name of entry with ID '%d' to [%s]", e.Id, name))
+	err := context.db.ChangeName(e.Id, name)
+	if err != nil {
+		context.logger.LogError(fmt.Sprintf("unable to change name of entry with ID '%d': %v", e.Id, err))
+	}
+
+	err = PrintTodos(context)
+	return err
+}
+
 var CLI struct {
 	List  ListCmd `cmd:"" default:"1" aliases:"ls" help:"List TODO entries."`
 	New   NewCmd  `cmd:"" aliases:"n" help:"Create a new TODO entry."`
 	Done  DoneCmd `cmd:"" aliases:"d" help:"Mark existing TODO entries as Done."`
 	Open  OpenCmd `cmd:"" aliases:"o" help:"Mark existing TODO entries as Open."`
+	Edit  EditCmd `cmd:"" aliases:"e" help:"Edit the name of an existing TODO entry."`
 	Debug bool    `help:"Enable debug mode for verbose logging."`
 }
 
@@ -133,4 +153,8 @@ func main() {
 	if err != nil {
 		logger.LogError(err.Error())
 	}
+}
+
+func SanitizeName(name string) string {
+	return strings.Split(strings.ReplaceAll(name, "\r\n", "\n"), "\n")[0]
 }

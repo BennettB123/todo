@@ -99,6 +99,16 @@ func (database *Database) ChangeTodoStatus(id uint32, status string) error {
 	return nil
 }
 
+func (database *Database) ChangeName(id uint32, name string) error {
+	_, err := database.db.ExecContext(context.Background(),
+		`UPDATE todo SET name = ? WHERE id = ?`, name, id)
+	if err != nil {
+		return fmt.Errorf("unable to update todo name in database: %w", err)
+	}
+
+	return nil
+}
+
 func (database *Database) Close() error {
 	if err := database.db.Close(); err != nil {
 		return fmt.Errorf("unable to close database: %w", err)
