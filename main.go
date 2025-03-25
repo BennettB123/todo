@@ -31,7 +31,7 @@ func (n *NewCmd) Run(context Context) error {
 	todo := NewTodo(name)
 
 	context.logger.LogDebug(fmt.Sprintf("creating new TODO entry with name [%s] and status [%s]", todo.name, todo.status))
-	err := context.db.CreateTodoEntry(todo)
+	err := context.db.CreateTodo(todo)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (e *EditCmd) Run(context Context) error {
 	name := SanitizeName(e.Name)
 
 	context.logger.LogDebug(fmt.Sprintf("editing name of entry with ID '%d' to [%s]", e.Id, name))
-	err := context.db.ChangeName(e.Id, name)
+	err := context.db.ChangeTodoName(e.Id, name)
 	if err != nil {
 		context.logger.LogError(fmt.Sprintf("unable to change name of entry with ID '%d': %v", e.Id, err))
 	}
@@ -100,7 +100,7 @@ type DeleteCmd struct {
 func (d *DeleteCmd) Run(context Context) error {
 	context.logger.LogDebug(fmt.Sprintf("Deleting TODO entries: %v", d.Ids))
 	for _, id := range d.Ids {
-		err := context.db.DeleteEntry(id)
+		err := context.db.DeleteTodo(id)
 		if err != nil {
 			context.logger.LogError(fmt.Sprintf("unable to delete entry with ID '%d': %v", id, err))
 		}
@@ -117,7 +117,7 @@ type ArchiveCmd struct {
 func (a *ArchiveCmd) Run(context Context) error {
 	context.logger.LogDebug(fmt.Sprintf("Archiving TODO entries: %v", a.Ids))
 	for _, id := range a.Ids {
-		err := context.db.ArchiveEntry(id)
+		err := context.db.ArchiveTodo(id)
 		if err != nil {
 			context.logger.LogError(fmt.Sprintf("unable to archive entry with ID '%d': %v", id, err))
 		}
@@ -140,7 +140,7 @@ var CLI struct {
 
 func PrintTodos(context Context, includeArchived bool) error {
 	context.logger.LogDebug("retrieving all TODO entries")
-	todos, err := context.db.GetAllTodoEntries()
+	todos, err := context.db.GetAllTodos()
 	if err != nil {
 		return err
 	}
@@ -153,13 +153,13 @@ func PrintTodos(context Context, includeArchived bool) error {
 
 	for _, todo := range todos {
 		if todo.status == Open && !todo.archived {
-			fmt.Printf("%d: [ ] %s\n", todo.id, todo.name)
+			fmt.Println(todo)
 		}
 	}
 
 	for _, todo := range todos {
 		if todo.status == Done && !todo.archived {
-			fmt.Printf("%d: [X] %s\n", todo.id, todo.name)
+			fmt.Println(todo)
 		}
 	}
 
@@ -168,11 +168,7 @@ func PrintTodos(context Context, includeArchived bool) error {
 
 		for _, todo := range todos {
 			if todo.archived {
-				if todo.status == Open {
-					fmt.Printf("%d: [ ] %s\n", todo.id, todo.name)
-				} else {
-					fmt.Printf("%d: [X] %s\n", todo.id, todo.name)
-				}
+				fmt.Println(todo)
 			}
 		}
 	}

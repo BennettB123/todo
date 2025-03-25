@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 // Todo Statuses
 const (
 	Open = "OPEN"
@@ -18,4 +20,13 @@ type Todo struct {
 //   The status is set to Open.
 func NewTodo(name string) Todo {
 	return Todo{0, name, Open, false}
+}
+
+func (t Todo) String() string {
+	checkbox := "[ ]"
+	if t.status == Done {
+		checkbox = "[X]"
+	}
+
+	return fmt.Sprintf("%d: %s %s", t.id, checkbox, t.name)
 }

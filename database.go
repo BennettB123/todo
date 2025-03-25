@@ -56,7 +56,7 @@ func (database *Database) Init() error {
 	return nil
 }
 
-func (database *Database) CreateTodoEntry(todo Todo) error {
+func (database *Database) CreateTodo(todo Todo) error {
 	_, err := database.db.ExecContext(context.Background(),
 		`INSERT INTO todo (name, status, archived) VALUES (?, ?, ?)`,
 		todo.name, todo.status, false)
@@ -67,7 +67,7 @@ func (database *Database) CreateTodoEntry(todo Todo) error {
 	return nil
 }
 
-func (database *Database) GetAllTodoEntries() ([]Todo, error) {
+func (database *Database) GetAllTodos() ([]Todo, error) {
 	rows, err := database.db.QueryContext(context.Background(),
 		`SELECT id, name, status, archived FROM todo`)
 	if err != nil {
@@ -100,7 +100,7 @@ func (database *Database) ChangeTodoStatus(id uint32, status string) error {
 	return nil
 }
 
-func (database *Database) ChangeName(id uint32, name string) error {
+func (database *Database) ChangeTodoName(id uint32, name string) error {
 	_, err := database.db.ExecContext(context.Background(),
 		`UPDATE todo SET name = ? WHERE id = ?`, name, id)
 	if err != nil {
@@ -110,7 +110,7 @@ func (database *Database) ChangeName(id uint32, name string) error {
 	return nil
 }
 
-func (database *Database) DeleteEntry(id uint32) error {
+func (database *Database) DeleteTodo(id uint32) error {
 	_, err := database.db.ExecContext(context.Background(),
 		`DELETE FROM todo WHERE id = ?`, id)
 	if err != nil {
@@ -120,7 +120,7 @@ func (database *Database) DeleteEntry(id uint32) error {
 	return nil
 }
 
-func (database *Database) ArchiveEntry(id uint32) error {
+func (database *Database) ArchiveTodo(id uint32) error {
 	_, err := database.db.ExecContext(context.Background(),
 		`UPDATE todo SET archived = 1 WHERE id = ?`, id)
 	if err != nil {
