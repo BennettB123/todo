@@ -1,4 +1,4 @@
-module github.com/dbballentine/todo
+module github.com/BennettB123/todo
 
 go 1.24.0
 
