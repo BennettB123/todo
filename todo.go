@@ -28,5 +28,5 @@ func (t Todo) String() string {
 		checkbox = "[X]"
 	}
 
-	return fmt.Sprintf("%d: %s %s", t.id, checkbox, t.name)
+	return fmt.Sprintf("%-3d %s %s", t.id, checkbox, t.name)
 }
