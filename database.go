@@ -47,7 +47,8 @@ func (database *Database) Init() error {
 		`CREATE TABLE IF NOT EXISTS todo (
 		id INTEGER PRIMARY KEY,
 		name string,
-		status string)`)
+		status string,
+		archived boolean)`)
 	if err != nil {
 		return fmt.Errorf("unable to create 'todo' table in sqlite3 database file: %w", err)
 	}
@@ -57,8 +58,8 @@ func (database *Database) Init() error {
 
 func (database *Database) CreateTodoEntry(todo Todo) error {
 	_, err := database.db.ExecContext(context.Background(),
-		`INSERT INTO todo (name, status) VALUES (?, ?)`,
-		todo.name, todo.status)
+		`INSERT INTO todo (name, status, archived) VALUES (?, ?, ?)`,
+		todo.name, todo.status, false)
 	if err != nil {
 		return fmt.Errorf("unable to insert todo entry into database: %w", err)
 	}
@@ -68,7 +69,7 @@ func (database *Database) CreateTodoEntry(todo Todo) error {
 
 func (database *Database) GetAllTodoEntries() ([]Todo, error) {
 	rows, err := database.db.QueryContext(context.Background(),
-		`SELECT id, name, status FROM todo`)
+		`SELECT id, name, status, archived FROM todo`)
 	if err != nil {
 		return nil, fmt.Errorf("unable to query todo entries from database: %w", err)
 	}
@@ -77,7 +78,7 @@ func (database *Database) GetAllTodoEntries() ([]Todo, error) {
 	var todos []Todo
 	for rows.Next() {
 		var todo Todo
-		if err := rows.Scan(&todo.id, &todo.name, &todo.status); err != nil {
+		if err := rows.Scan(&todo.id, &todo.name, &todo.status, &todo.archived); err != nil {
 			return nil, fmt.Errorf("unable to scan todo entry from database: %w", err)
 		}
 		todos = append(todos, todo)
@@ -114,6 +115,16 @@ func (database *Database) DeleteEntry(id uint32) error {
 		`DELETE FROM todo WHERE id = ?`, id)
 	if err != nil {
 		return fmt.Errorf("unable to delete todo entry from database: %w", err)
+	}
+
+	return nil
+}
+
+func (database *Database) ArchiveEntry(id uint32) error {
+	_, err := database.db.ExecContext(context.Background(),
+		`UPDATE todo SET archived = 1 WHERE id = ?`, id)
+	if err != nil {
+		return fmt.Errorf("unable to archive todo entry in database: %w", err)
 	}
 
 	return nil
