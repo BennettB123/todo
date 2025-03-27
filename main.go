@@ -134,7 +134,7 @@ var CLI struct {
 	Open    OpenCmd    `cmd:"" help:"Mark existing TODO entries as Open."`
 	Edit    EditCmd    `cmd:"" help:"Edit the name of an existing TODO entry."`
 	Delete  DeleteCmd  `cmd:"" aliases:"rm" help:"Delete existing TODO entries."`
-	Archive ArchiveCmd `cmd:"" help:"Archive existing TODO entries."`
+	Archive ArchiveCmd `cmd:"" help:"Archive existing TODO entries. Archived entries are not listed by default."`
 	Debug   bool       `help:"Enable debug mode for verbose logging."`
 }
 
