@@ -38,7 +38,7 @@ Tasks are assigned a unique ID upon creation. Tasks will be displayed with their
 ```
 
 ### Edit a Task
-To edit an existing task, use:
+To edit the description of an existing task, use:
 ```bash
 todo edit <task-id> "Updated task description"
 ```
