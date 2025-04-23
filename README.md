@@ -1,5 +1,5 @@
 # TODO
-A simple command-line TODO list manager written with GO.
+A simple command-line TODO list manager written with Go.
 
 ## Features
 - Add, edit, view, and delete tasks
